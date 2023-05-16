@@ -1,32 +1,36 @@
 import * as fs from "fs";
+import * as path from "path";
+import * as printHelper from "./util/printHelper.js"
 
 export async function Init(input, state, output) {
+    var fileStream = fs.existsSync(input) ? fs.createReadStream(input) : Exit("Input file does not exist");
+    
     console.log(`${process.env.SCRAPERS}/${state}_scrape.js`);
+    var scraper;
     try {
-        var scraper = await import(`${process.env.SCRAPERS}/${state}_scrape.js`);
+        scraper = await import(`./scrapers/FL_scrape.js`);
     } catch (e) {
         console.log(e);
         console.log("Invalid state");
-        printValidStateOpts();
+        printHelper.PrintValidStateOpts();
+        return;
     }
 
-    await scraper.Init();
-    console.log("startingggg");
-    return "what";
+
+    
+    await scraper.Init("what");
+
+    return;
 }
 
-function saveFile(output, data) {
+function SaveFile(output, data) {
     fs.writeFile(output, data, (err) => {
         if (err) throw err;
         console.log("File saved");
     });
 }
 
-function printValidStateOpts() {
-    var files = fs.readdirSync("./scrapers");
-
-    console.log("Available options are:");
-    for (var i = 0; i < files.length; i++) {
-        console.log(path.parse(files[i]).name.substr(0, 2));
-    }
+function Exit(reason) {
+    console.log(reason);
+    process.exit();
 }

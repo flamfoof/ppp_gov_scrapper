@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import dotenv from "dotenv";
 import { Command } from "commander";
-import { dirname, resolve } from "path";
 import * as path from "path";
 import logbuffer from "console-buffer";
 import * as mainScrape from "./src/mainScrape.js";
+import * as printHelper from "./src/util/printHelper.js";
 
 const program = new Command();
 
@@ -53,11 +53,11 @@ async function Init() {
         }
     } else if (options.state.length != 2) {
         console.log(`Invalid state: ${options.state}`);
-        printValidStateOpts();
+        printHelper.PrintValidStateOpts();
     }
 
     function printValidStateOpts() {
-        var files = fs.readdirSync("./scrapers");
+        var files = fs.readdirSync(`${process.env.SCRAPERS}`);
 
         console.log("Available options are:");
         for (var i = 0; i < files.length; i++) {
