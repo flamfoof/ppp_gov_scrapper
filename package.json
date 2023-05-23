@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "debugThing": "node --inspect index.js -i \"./temp\\ppp_smaller.csv\" -s FL -o \"./out/"
   },
   "repository": {
     "type": "git",
@@ -20,12 +21,18 @@
   "homepage": "https://github.com/flamfoof/ppp_gov_scrapper#readme",
   "dependencies": {
     "aws-sdk": "^2.1280.0",
+    "axios": "^1.4.0",
+    "cheerio": "^1.0.0-rc.12",
     "commander": "^9.4.1",
     "console-buffer": "^1.1.1",
     "csv-parse": "^5.3.3",
     "csv-parser": "^3.0.0",
     "dotenv": "^16.0.3",
     "JSONStream": "^1.3.5",
-    "node-fetch": "^3.3.0"
+    "node-fetch": "^3.3.0",
+    "readline": "^1.3.0"
+  },
+  "devDependencies": {
+    "jest-mock-axios": "^4.7.2"
   }
 }
