@@ -56,18 +56,10 @@ export async function Init(input, state, output) {
 		return
 	}
 
-	//input sanitize special characters
-	// input.replace(/[^\w ]/g, '').replace(/\s+/g, ' ');
-	// console.log(input)
-	// return;
-	// try {
-	// 	res = await scraper.Init(input)
-	// } catch (e) {
-	// 	console.log("Scraping failed because: " + e)
-	// 	console.log(e)
-	// }
-
 	remainingItems = await ReadFromCSV(fileStream, paths, packCount)
+
+	//updating packNum
+	packNum = fs.readdirSync(packPath).length
 
 	await netAPI.PackAllToJSON(remainingItems, paths, packNum)
 	// process.exit(1)
@@ -174,60 +166,6 @@ async function ReadFromCSV(inputStream, paths, storedCount) {
 
 	return streamOut
 }
-// rl.on("line", (line) => {
-// 	if (currIndex >= 0 && currIndex > storedCount - 1) {
-// 		// var contentDetail
-// var urlSearchTarget
-// var lineInfo = line.replaceAll(",,", "\n")
-// lineInfo = lineInfo.replaceAll(',"', "\n")
-// lineInfo = lineInfo.replaceAll('",', "\n")
-// //split all commas
-// lineInfo = lineInfo.replaceAll(/(?<=\w),(?=\w)/g, "\n")
-// lineInfo = lineInfo.split("\n")
-
-// urlSearchTarget = netAPI.SanitizeSpecialChar(lineInfo[2])
-
-// 		//do network call here
-// 		// contentDetail = fs.readFileSync("./temp/FL_business_sample.json")
-
-// 		if ((currIndex + 1) % process.env.MAX_PACK_SIZE == 0) {
-// 			console.log("Line: " + currIndex)
-// 			logbuffer.flush()
-// 			prevFileCount = fileCount
-// 			streamOut.push(urlSearchTarget)
-// 			rl.pause()
-// 		} else {
-// 			streamOut.push(urlSearchTarget)
-// 		}
-// 	}
-
-// 	currIndex++
-// })
-
-// rl.on("pause", () => {
-// console.log("PAUSED")
-// var output = `${paths.output}/${paths.state}/${process.env.PACK_NAME}/`
-// var fileName = `${paths.name}_${fileCount}.json`
-// var fileData = JSON.stringify(streamOut, null, 2)
-// contentDetail = RunScraper(urlSearchTarget, rl)
-// if (fileCount == prevFileCount) {
-// 	console.log("Writing to file: " + output + fileName)
-// 	SaveFile(output, fileName, fileData)
-// 	streamOut = []
-// 	fileCount++
-// }
-// })
-
-// rl.on("close", () => {
-// 	console.log("Finished reading file")
-// 	var output = `${paths.output}/${paths.state}/${process.env.PACK_NAME}/`
-// 	var fileName = `${paths.name}_${fileCount}.json`
-// 	var fileData = streamOut
-
-// 	console.log("Writing to file: " + output + fileName)
-// 	SaveFile(output, fileName, fileData)
-// })
-// }
 
 async function RunScraper(target, rlHandle) {
 	var res
