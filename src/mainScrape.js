@@ -118,7 +118,6 @@ async function ReadFromCSV(inputStream, paths, storedCount) {
 			//split all commas
 			lineInfo = lineInfo.replaceAll(/(?<=\w),(?=\w)/g, "\n")
 			lineInfo = lineInfo.replaceAll(".,", ".\n")
-			console.log(lineInfo)
 			lineInfo = lineInfo.split("\n")
 
 			urlSearchTarget = netAPI.SanitizeSpecialChar(lineInfo[2])
