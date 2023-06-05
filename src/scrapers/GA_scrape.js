@@ -28,7 +28,16 @@ var requestHeaders = {
 }
 
 export async function Init(input) {
-	var baseURL = "https://search.sunbiz.org"
+	//post
+	//https://ecorp.sos.ga.gov/BusinessSearch
+	//payload:
+	//search.SearchType=BusinessName&search.SearchValue=JIM+ELLIS+ATLANTA+INC&search.SearchCriteria=Contains
+	//get direct page:
+	//GET
+	//https://ecorp.sos.ga.gov/BusinessSearch/BusinessInformation?businessId=688147&businessType=Domestic%20Profit%20Corporation&fromSearch=True
+	//payload:
+	//businessId=688147&businessType=Domestic%20Profit%20Corporation&fromSearch=True
+	var baseURL = "https://ecorp.sos.ga.gov/BusinessSearch"
 	//should be input
 	var targetSearch = netAPI.SanitizeSpecialChar(input)
 	var urlSearch = `${baseURL}/Inquiry/CorporationSearch/SearchResults/EntityName/${encodeURIComponent(

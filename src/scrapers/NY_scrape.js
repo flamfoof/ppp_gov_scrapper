@@ -28,7 +28,17 @@ var requestHeaders = {
 }
 
 export async function Init(input) {
-	var baseURL = "https://search.sunbiz.org"
+	//post
+	//https://apps.dos.ny.gov/PublicInquiryWeb/api/PublicInquiry/GetComplexSearchMatchingEntities
+	//payyload:
+	//{"searchValue":"GIRL SCOUTS OF THE UNITED STATES OF AMERICA","searchByTypeIndicator":"EntityName","searchExpressionIndicator":"BeginsWith","entityStatusIndicator":"AllStatuses","entityTypeIndicator":["Corporation","LimitedLiabilityCompany","LimitedPartnership","LimitedLiabilityPartnership"],"listPaginationInfo":{"listStartRecord":1,"listEndRecord":50}}
+
+	//post
+	//https://apps.dos.ny.gov/PublicInquiryWeb/api/PublicInquiry/GetEntityRecordByID
+	//payload:
+	//{"SearchID":"4658825","EntityName":"GIRL SCOUTS OF THE UNITED STATES OF AMERICA","AssumedNameFlag":"false"}
+	
+	var baseURL = "https://apps.dos.ny.gov/PublicInquiryWeb/api/PublicInquiry/GetComplexSearchMatchingEntities"
 	//should be input
 	var targetSearch = netAPI.SanitizeSpecialChar(input)
 	var urlSearch = `${baseURL}/Inquiry/CorporationSearch/SearchResults/EntityName/${encodeURIComponent(
