@@ -22,6 +22,7 @@ export async function Init(input, state, output) {
 		packPath: packPath,
 		name: `${state}`,
 	}
+	
 	var remainingItems = []
 
 	CreateDirectory(output)
@@ -174,7 +175,7 @@ async function RunScraper(target, config = null) {
 	var res
 	console.log(target)
 
-	if(config?.state) {
+	if(config?.state && process.env.currentState != config.state) {
 		scraper = await import(`./scrapers/${config.state}_scrape.js`)
 	}
 

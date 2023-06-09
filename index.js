@@ -47,6 +47,7 @@ async function Init() {
 
 	if (options.state && options.state.length == 2) {
 		if (options.input) {
+			process.env.currentState = options.state
 			mainScrape.Init(options.input, options.state, options.output)
 		} else {
 			console.log("You require an -i/--input for scraping")
