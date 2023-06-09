@@ -138,8 +138,8 @@ function ExtractProperties(officer) {
 	}
 	
 	if(!officer.name)
-		return officer
-	
+		return null
+		
 	const name = officer.name
 			.replace(/\s+/g, " ")
 			.trim()
