@@ -27,11 +27,11 @@ export async function Init(input, state, output) {
 
 	CreateDirectory(output)
 
-	try {
-		DeleteDirectory(packPath)
-	} catch (e) {
-		console.log("Failed to delete directory: " + e.message)
-	}
+	// try {
+	// 	DeleteDirectory(packPath)
+	// } catch (e) {
+	// 	console.log("Failed to delete directory: " + e.message)
+	// }
 
 	if (fs.existsSync(packPath)) {
 		try {
