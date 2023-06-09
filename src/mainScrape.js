@@ -26,11 +26,11 @@ export async function Init(input, state, output) {
 
 	CreateDirectory(output)
 
-	// try {
-	// 	DeleteDirectory(packPath)
-	// } catch (e) {
-	// 	console.log("Failed to delete directory: " + e.message)
-	// }
+	try {
+		DeleteDirectory(packPath)
+	} catch (e) {
+		console.log("Failed to delete directory: " + e.message)
+	}
 
 	if (fs.existsSync(packPath)) {
 		try {
@@ -48,7 +48,7 @@ export async function Init(input, state, output) {
 	console.log(`${process.env.SCRAPERS}/${state}_scrape.js`)
 
 	try {
-		scraper = await import(`./scrapers/FL_scrape.js`)
+		scraper = await import(`./scrapers/${state}_scrape.js`)
 	} catch (e) {
 		console.log(e)
 		console.log("Invalid state")
@@ -109,6 +109,7 @@ async function ReadFromCSV(inputStream, paths, storedCount) {
 	console.log("File is too large, so going to stream it")
 	for await (const line of rl) {
 		if (currIndex >= 0 && currIndex > storedCount - 1) {
+			// await netAPI.sleep(process.env.SLEEP_TIMER)
 			var urlSearchTarget
 			var companyDetail
 			var employeeDetail
@@ -120,9 +121,10 @@ async function ReadFromCSV(inputStream, paths, storedCount) {
 			lineInfo = lineInfo.replaceAll(".,", ".\n")
 			lineInfo = lineInfo.split("\n")
 
-			urlSearchTarget = netAPI.SanitizeSpecialChar(lineInfo[2])
+			urlSearchTarget = lineInfo[2]
 
 			employeeDetail = await RunScraper(urlSearchTarget)
+			employeeDetail = employeeDetail ? employeeDetail : await RunScraper(urlSearchTarget, {"state":"FL"})
 
 			companyDetail = {
 				businessName: lineInfo[2].replaceAll('"', ""),
@@ -168,15 +170,20 @@ async function ReadFromCSV(inputStream, paths, storedCount) {
 	return streamOut
 }
 
-async function RunScraper(target, rlHandle) {
+async function RunScraper(target, config = null) {
 	var res
 	console.log(target)
+
+	if(config?.state) {
+		scraper = await import(`./scrapers/${config.state}_scrape.js`)
+	}
+
 	try {
 		res = await scraper.Init(target)
 	} catch (e) {
 		console.log("Scraping failed because: " + e)
 		console.log(e)
 	}
-
+	
 	return res
 }

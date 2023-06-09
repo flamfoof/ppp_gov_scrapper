@@ -43,13 +43,14 @@ export async function Init(input) {
 	util.inspect.defaultOptions.depth = 1
 
 	return new Promise(function (resolve, reject) {
+		var searchedItem
 		axios
 			.get(urlSearch, requestHeaders)
 			.then((response) => {
 				// response.data = file //delete after
 				const $ = cheerio.load(response.data)
 				const page = $("#search-results")
-				var searchedItem
+
 				searchPage = SearchPageItem(targetSearch, page)
 				searchedItem = SearchMatchedItem(targetSearch, searchPage)
 				if (searchedItem != null) {
@@ -75,7 +76,7 @@ export async function Init(input) {
 							reject(e)
 						})
 				} else {
-					reject("No search results found at: " + urlSearch)
+					reject("No Detail results found at: " + urlSearch)
 				}
 			})
 			.catch((error) => {
@@ -88,6 +89,7 @@ export async function Init(input) {
 
 function PageScrape(officerDetailList) {
 	var officers = null
+
 	for (var i = 0; i < officerDetailList.length; i++) {
 		if (
 			officerDetailList[i].children[1].children[0].data.match(
@@ -149,8 +151,6 @@ function ExtractProperties(officer) {
 		}
 	}
 
-	// console.log(officers)
-
 	return officers
 }
 
@@ -173,16 +173,46 @@ function SearchPageItem(companyName, page) {
 		)
 		items.link = detailTarget[0].children[0].attribs.href
 		items.status = detailTarget[2].children[0].data
-
-		if (!items.status.match(/INACT/gi)) companyItems.push(items)
+		if (netAPI.SanitizeSpecialChar(items.companyName).match(companyName)) {
+			companyItems.push(items)
+		}
 	}
 
 	return companyItems
 }
 
 function SearchMatchedItem(company, companyItems) {
+	var validCompany = null
+
 	for (var item in companyItems) {
-		if (companyItems[item].companyName == netAPI.SanitizeSpecialChar(company))
-			return companyItems[item]
+		if (
+			companyItems[item].companyName == netAPI.SanitizeSpecialChar(company) &&
+			!companyItems[item].status.match(/INACT/gi)
+		) {
+			validCompany = companyItems[item]
+			break
+		}
 	}
+
+	if (!validCompany) {
+		for (var item in companyItems) {
+			if (netAPI.SanitizeSpecialChar(companyItems[item].companyName) == company) {
+				validCompany = companyItems[item]
+				validCompany.matchedName = companyItems[item].companyName
+				break
+			}
+		}
+	}
+
+	if (!validCompany) {
+		for (var item in companyItems) {
+			if (netAPI.SanitizeSpecialChar(companyItems[item].companyName).match(company)) {
+				validCompany = companyItems[item]
+				validCompany.matchedName = companyItems[item].companyName
+				break
+			}
+		}
+	}
+
+	return validCompany
 }

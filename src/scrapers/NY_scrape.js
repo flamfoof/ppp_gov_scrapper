@@ -30,87 +30,98 @@ var requestHeaders = {
 export async function Init(input) {
 	//post
 	//https://apps.dos.ny.gov/PublicInquiryWeb/api/PublicInquiry/GetComplexSearchMatchingEntities
-	//payyload:
+	//payload:
 	//{"searchValue":"GIRL SCOUTS OF THE UNITED STATES OF AMERICA","searchByTypeIndicator":"EntityName","searchExpressionIndicator":"BeginsWith","entityStatusIndicator":"AllStatuses","entityTypeIndicator":["Corporation","LimitedLiabilityCompany","LimitedPartnership","LimitedLiabilityPartnership"],"listPaginationInfo":{"listStartRecord":1,"listEndRecord":50}}
 
 	//post
 	//https://apps.dos.ny.gov/PublicInquiryWeb/api/PublicInquiry/GetEntityRecordByID
 	//payload:
 	//{"SearchID":"4658825","EntityName":"GIRL SCOUTS OF THE UNITED STATES OF AMERICA","AssumedNameFlag":"false"}
-	
-	var baseURL = "https://apps.dos.ny.gov/PublicInquiryWeb/api/PublicInquiry/GetComplexSearchMatchingEntities"
-	//should be input
-	var targetSearch = netAPI.SanitizeSpecialChar(input)
-	var urlSearch = `${baseURL}/Inquiry/CorporationSearch/SearchResults/EntityName/${encodeURIComponent(
-		targetSearch
-	)}/Page1`
+
+	var targetSearch = input
+	var baseURL =
+		"https://apps.dos.ny.gov/PublicInquiryWeb/api/PublicInquiry/GetComplexSearchMatchingEntities"
+	var baseURLPayload = {
+		searchValue: `${targetSearch}`,
+		searchByTypeIndicator: "EntityName",
+		searchExpressionIndicator: "BeginsWith",
+		entityStatusIndicator: "AllStatuses",
+		entityTypeIndicator: [
+			"Corporation",
+			"LimitedLiabilityCompany",
+			"LimitedPartnership",
+			"LimitedLiabilityPartnership",
+		],
+		listPaginationInfo: { listStartRecord: 1, listEndRecord: 50 },
+	}
+	requestHeaders.data = JSON.stringify(baseURLPayload)
+	requestHeaders.method = "POST"
+
+	var urlSearch = `${baseURL}`
 	var urlDetails = null
 	var officers = []
-	var searchPage = null
-	// urlSearch = "http://localhost:5000" //delete after
-	// var file = fs.readFileSync("./out/test.txt") // delete after
 
 	util.inspect.defaultOptions.depth = 1
 
 	return new Promise(function (resolve, reject) {
 		axios
-			.get(urlSearch, requestHeaders)
+			.request(urlSearch, requestHeaders)
 			.then((response) => {
-				// response.data = file //delete after
-				const $ = cheerio.load(response.data)
-				const page = $("#search-results")
-				var searchedItem
-				searchPage = SearchPageItem(targetSearch, page)
-				searchedItem = SearchMatchedItem(targetSearch, searchPage)
-				if (searchedItem != null) {
-					urlDetails = baseURL + searchedItem?.link
+				const result = response.data.entitySearchResultList
+
+				if (result.length > 0) {
+					var index = 0;
+					var found = false;
+					for (var i = 0; i < result.length; i++) {
+						if (netAPI.SanitizeSpecialChar(result[i].entityName) == netAPI.SanitizeSpecialChar(targetSearch)) {
+							index = i
+							found = true;
+							break
+						}
+					}
+					if(found)
+					{
+						urlDetails =
+						"https://apps.dos.ny.gov/PublicInquiryWeb/api/PublicInquiry/GetEntityRecordByID"
+						requestHeaders.data = JSON.stringify({
+							SearchID: `${result[index].dosID}`,
+							EntityName: `${targetSearch}`,
+							AssumedNameFlag: "false",
+						})
+					} else {
+						reject("No matched results found at: " + urlSearch)
+					}
+					
+				} else {
+					reject("No search results found at: " + urlSearch)
 				}
 			})
 			.finally(() => {
 				var content = null
 				if (urlDetails) {
 					axios
-						.get(urlDetails, requestHeaders)
+						.request(urlDetails, requestHeaders)
 						.then((response) => {
-							const $ = cheerio.load(response.data)
-							content = $(".detailSection")
-							officers = PageScrape(content)
+							content = response.data
+							officers = ExtractProperties(content.ceo)
 						})
 						.finally(() => {
 							console.log("def resolved")
 							resolve(officers)
 						})
 						.catch((e) => {
-							console.log("Failed to get Details at: " + urlDetails)
+							console.log("Failed to get Details at: " + urlDetails + " for: " + targetSearch)
 							reject(e)
 						})
 				} else {
-					reject("No search results found at: " + urlSearch)
+					reject("No Detail results found at: " + urlSearch + " for: " + targetSearch)
 				}
 			})
 			.catch((error) => {
 				console.log("Failed to get search at: " + urlSearch)
-				//reject and return error code
 				reject(error)
 			})
 	})
-}
-
-function PageScrape(officerDetailList) {
-	var officers = null
-	for (var i = 0; i < officerDetailList.length; i++) {
-		if (
-			officerDetailList[i].children[1].children[0].data.match(
-				/(officer|director|president|authorized|person)/gi
-			)
-		) {
-			const officerDetail = officerDetailList[i].children
-
-			officers = ExtractProperties(officerDetail)
-		}
-	}
-
-	return officers
 }
 
 function ExtractProperties(officer) {
@@ -125,74 +136,26 @@ function ExtractProperties(officer) {
 		city: "",
 		zipcode: "",
 	}
-
-	for (var i = 0; i < officer.length; i++) {
-		const officerProperties = JSON.parse(JSON.stringify(officerTemplates))
-
-		if (
-			officer[i]?.tagName == "span" &&
-			officer[i].children.length > 0 &&
-			officer[i]?.children[0].data?.match(/title/gi)
-		) {
-			//get current index of the element in the list
-			const itemIndex = officer.indexOf(officer[i])
-
-			//get the rest of the properties
-			const name = officer[i].parent.children[itemIndex + 5].data
-				.replace(/\s+/g, " ")
-				.trim()
-				.split(" ")
-			const addressDiv = officer[i].parent.children[itemIndex + 6].children[1]
-			const address = addressDiv.children[0].data.replace(/\s+/g, " ").trim()
-			const location = addressDiv.children[2].data.replace(/\s+/g, " ").trim().split(" ")
-
-			officerProperties.title = officer[i].children[0].data.replace(/Title\s/gi, "")
-			officerProperties.firstName = name[1]
-			officerProperties.middleName = name[2] ? name[2] : ""
-			officerProperties.lastName = name[0].replace(",", "")
-			officerProperties.address = address
-			officerProperties.state = location[1]
-			officerProperties.city = location[0].replace(",", "")
-			officerProperties.zipcode = location[2]
-
-			officers.push(officerProperties)
-		}
-	}
-
-	// console.log(officers)
-
+	
+	if(!officer.name)
+		return officer
+	
+	const name = officer.name
+			.replace(/\s+/g, " ")
+			.trim()
+			.split(" ")
+			
+	var officerProperties = officerTemplates;
+	officerProperties.title = "CEO"
+	officerProperties.firstName = name[0]
+	officerProperties.middleName = name[2] ? name[1] : ""
+	officerProperties.lastName = name[2] ? name[2].replace(",", "") : name[1].replace(",", "")
+	officerProperties.address = officer.address.streetAddress
+	officerProperties.state = officer.address.state
+	officerProperties.city = officer.address.city
+	officerProperties.zipcode = officer.address.zipCode + officer.address.zipPlus4
+	officers.push(officerProperties)
+	
 	return officers
 }
 
-function SearchPageItem(companyName, page) {
-	//return an item from search page's table
-	var companyItems = []
-
-	var searchResults = page
-	var searchResult = searchResults.find("tbody")
-	var companyList = searchResult.find("tr")
-
-	for (var el = 0; el < companyList.length; el++) {
-		var target = companyList[el]
-		var targetRows = target.children.filter((e) => e.type == "tag")
-		var detailTarget = targetRows
-		var items = {}
-
-		items.companyName = netAPI.SanitizeSpecialChar(
-			detailTarget[0].children[0].children[0]?.data
-		)
-		items.link = detailTarget[0].children[0].attribs.href
-		items.status = detailTarget[2].children[0].data
-
-		if (!items.status.match(/INACT/gi)) companyItems.push(items)
-	}
-
-	return companyItems
-}
-
-function SearchMatchedItem(company, companyItems) {
-	for (var item in companyItems) {
-		if (companyItems[item].companyName == netAPI.SanitizeSpecialChar(company))
-			return companyItems[item]
-	}
-}
