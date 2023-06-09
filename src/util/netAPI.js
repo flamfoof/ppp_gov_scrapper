@@ -248,7 +248,7 @@ export async function PackAllToJSON(
 	// }
 	console.log("Almost done packing")
 
-	await WriteToJSON(finalResult, paths.output + `${paths.state}`)
+	await WriteToJSON(finalResult, paths.output + `${paths.state}`, `ppp_${paths.state}_out.json`)
 }
 
 export function AddToPrintConsole(string) {
