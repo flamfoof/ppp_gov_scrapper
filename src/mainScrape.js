@@ -94,7 +94,7 @@ function DeleteDirectory(dir) {
 function Exit(reason) {
 	console.log(reason)
 	console.log("Exiting...")
-	process.exit()
+	process.exit(1)
 }
 
 async function ReadFromCSV(inputStream, paths, storedCount) {
