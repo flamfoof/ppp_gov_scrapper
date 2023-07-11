@@ -27,11 +27,11 @@ export async function Init(input, state, output) {
 
 	CreateDirectory(output)
 
-	// try {
-	// 	DeleteDirectory(packPath)
-	// } catch (e) {
-	// 	console.log("Failed to delete directory: " + e.message)
-	// }
+	try {
+		DeleteDirectory(packPath)
+	} catch (e) {
+		console.log("Failed to delete directory: " + e.message)
+	}
 
 	if (fs.existsSync(packPath)) {
 		try {
@@ -125,8 +125,10 @@ async function ReadFromCSV(inputStream, paths, storedCount) {
 			urlSearchTarget = lineInfo[2]
 
 			employeeDetail = await RunScraper(urlSearchTarget)
-			employeeDetail = employeeDetail ? employeeDetail : await RunScraper(urlSearchTarget, {"state":"FL"})
-
+			// employeeDetail ? console.log("Found it") : console.log("Not found, running for alt");
+			// employeeDetail = employeeDetail ? employeeDetail : await RunScraper(urlSearchTarget, {"state":"FL"})
+			console.log(employeeDetail)
+			process.exit(1)
 			companyDetail = {
 				businessName: lineInfo[2].replaceAll('"', ""),
 				address: lineInfo[3].replaceAll('"', ""),
@@ -176,6 +178,7 @@ async function RunScraper(target, config = null) {
 	console.log(target)
 
 	if(config?.state && process.env.currentState != config.state) {
+		console.log("--------- running alt")
 		scraper = await import(`./scrapers/${config.state}_scrape.js`)
 	}
 
