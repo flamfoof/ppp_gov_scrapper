@@ -121,14 +121,13 @@ async function ReadFromCSV(inputStream, paths, storedCount) {
 			lineInfo = lineInfo.replaceAll(/(?<=\w),(?=\w)/g, "\n")
 			lineInfo = lineInfo.replaceAll(".,", ".\n")
 			lineInfo = lineInfo.split("\n")
-
+			// "Cotton Patch Café, LLC".normalize("NFD").replace(/[\u0300-\u036f]/g, "").replaceAll(",,", "\n")
 			urlSearchTarget = lineInfo[2]
 
 			employeeDetail = await RunScraper(urlSearchTarget)
 			// employeeDetail ? console.log("Found it") : console.log("Not found, running for alt");
 			// employeeDetail = employeeDetail ? employeeDetail : await RunScraper(urlSearchTarget, {"state":"FL"})
-			console.log(employeeDetail)
-			process.exit(1)
+
 			companyDetail = {
 				businessName: lineInfo[2].replaceAll('"', ""),
 				address: lineInfo[3].replaceAll('"', ""),
