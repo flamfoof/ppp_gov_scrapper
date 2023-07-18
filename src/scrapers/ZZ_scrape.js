@@ -48,30 +48,41 @@ export async function Init(input) {
 
 	var urlSearch = `${baseURL}`
 	var urlDetails = null
-	var officers = []
 	var continueParse = false;
 	util.inspect.defaultOptions.depth = 1
 	
 	return new Promise(function (resolve, reject) {
-		
+		var currentContent = null
 		axios
 			.request(urlSearch, requestHeaders)
 			.then((response) => {
-				console.log("whaaats")
 				var result = response.data.toString();
+				currentContent = result;
+				
+				//Checks if Loading page is 
+				if(result.includes("Loading...")) {
+					console.log("Loading...")
+					if(process.env?.COOKIES)
+					{
+						process.env.COOKIES = "";
+						console.log("cookies cleared")
+					}
+				}
 
-				if(!process.env?.COOKIES)
+				if(!process.env?.COOKIES || process.env.COOKIES == "")
 				{
 					result = result.substring(result.indexOf("<!--"), result.indexOf("</script>"))
 
 					result = result.replace("document.cookie", "var document = {}\ndocument.cookie")
-					result = result.replace("document.location.reload(true);", "console.log(document.cookie)\nreturn document.cookie");
+					result = result.replace("document.location.reload(true);", "//console.log(document.cookie)\nreturn document.cookie");
 					result += "\ngo()"
 					var cookies = eval(result);
-					
+
+					console.log(cookies)
 					process.env.COOKIES = cookies
 					requestHeaders.headers.Cookie = process.env.COOKIES
 				}
+				process.exit(1)
 				continueParse = true;
 			})
 			.finally(() => {
@@ -79,9 +90,10 @@ export async function Init(input) {
 					axios
 						.request(urlSearch, requestHeaders)
 						.then((response) => {
-							content = response.data
+							currentContent = response.data
 							console.log("yeaaaah")
-							console.log(content)
+							console.log(currentContent)
+							process.exit(1)
 						})
 						.finally(() => {
 							console.log("def resolved")
@@ -98,6 +110,7 @@ export async function Init(input) {
 			})
 			.catch((error) => {
 				console.log("Failed to get search at: " + urlSearch)
+				console.log(currentContent)
 				reject(error)
 			})
 	})
